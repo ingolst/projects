@@ -1,0 +1,1 @@
+This is a simple quiz game that asks the player questions and gives them multiple choice options. A score is tallied using += and returned using the display_score function. Currently incomplete.
