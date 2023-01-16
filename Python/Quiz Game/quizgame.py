@@ -21,6 +21,7 @@ def new_game():
         question_num +=1
     display_score(correct_guesses, guesses)
 
+
 # ------------------------------
 def check_answer(answer, guess):
     
@@ -36,19 +37,29 @@ def display_score(correct_guesses, guesses):
     print("------------------------------")
     print("RESULTS")
     print("------------------------------")
-
+    
     print("Answers: ", end="")
     for i in questions:
-        print(questions.get(i), end="")
+        print(questions.get(i), end=" ")
     print()
 
     print("Guesses: ", end="")
     for i in guesses:
-        print(i, end="")
+        print(i, end=" ")
     print()
+
+    score = int((correct_guesses/len(questions))*100)
+    print("Your score is: "+str(score)+"%")
 # ------------------------------
 def play_again():
-    pass
+    
+    response = input("Do you want to play again? (yes or no): ")
+    response = response.upper()
+
+    if response == "YES":
+        return True
+    else:
+        return False
 # ------------------------------
 
 questions = {
@@ -66,3 +77,8 @@ options = [["A. Guido van Rossum", "B. Elon Musk", "C. Bill Gates", "D. Mark Zuc
 # Calls new_game function to begin a new game
 
 new_game()
+
+while play_again():
+    new_game()
+
+print("Bye!")
