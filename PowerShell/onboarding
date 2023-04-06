@@ -1,0 +1,120 @@
+#Suppress errors & warnings
+Import-PSSession -session -disablenamechecking
+$ErrorActionPreference = 'SilentlyContinue'
+$WarningPreference = 'SilentlyContinue'
+
+#Checks for Active Directory, Microsoft Teams and Azure AD modules
+Import-Module ActiveDirectory
+Import-Module AzureAD
+Install-Module -Name MicrosoftTeams -RequiredVersion 1.1.6
+
+Clear-Host
+
+#Set the domain and path to the Ex Employees folder. Rename 'Ex Employees' with location where you would like to move the user
+#Rename OU with destination path, rename $domain and 'CUSTOM' to domain name
+$domain = "CUSTOM.local"
+$modernDomain = "Modern DOMAIN"
+$usersOU = "OU=Users,$modernDomain,DC=brentwood,DC=local"
+
+#Define department list with numbers
+$departmentList = @{
+    1 = "Sales"
+    2 = "Marketing"
+    3 = "Human Resources"
+    4 = "Finance"
+    5 = "IT"
+    6 = "Legal"
+    7 = "Operations"
+    8 = "Customer Service"
+    9 = "Product Development"
+    10 = "Research"
+    11 = "Engineering"
+    12 = "Design"
+    13 = "Quality Assurance"
+    14 = "Facilities"
+    15 = "Other"
+    16 = "Assets"
+    17 = "Audit"
+    18 = "Basildon Users"
+    19 = "Building Control"
+    20 = "Business Transformation"
+    21 = "CCTV"
+    22 = "Chief Executive"
+    23 = "Contacts"
+    24 = "Corporate Services"
+    25 = "Democratic Services"
+    26 = "Electoral Services"
+    27 = "Env Health"
+    28 = "Finance"
+    29 = "Housing Services"
+    30 = "Legal & Governance"
+    31 = "Members"
+    32 = "Parking"
+    33 = "Planning"
+    34 = "Rochford Users"
+    35 = "Safety & Localism"
+    36 = "Service Accounts"
+    37 = "Streetscene & Environment"
+    38 = "Temp Users"
+    39 = "Test Accounts"
+    40 = "Third Party"
+}
+
+#Request input for display name of user to onboard
+Clear-Host
+$displayName = Read-Host "Enter the display name of the new user to onboard (e.g. John Smith): "
+
+#Request input for username of user to onboard
+$username = Read-Host "Enter the username of the new user to onboard (e.g. jsmith): "
+
+#Request input for password of user to onboard
+$password = Read-Host "Enter the password for the new user to onboard: " -AsSecureString
+
+#Request input for the department of the new user to onboard
+Clear-Host
+Write-Host "Please select the department for the new user to onboard by entering the corresponding number: "
+foreach ($department in $departmentList.GetEnumerator() | Sort-Object Key) {
+    Write-Host "$($department.Key). $($department.Value)"
+}
+$departmentNumber = Read-Host "Enter the number of the department for the new user to onboard: "
+$departmentName = $departmentList[$departmentNumber]
+
+#Construct OU path for the department
+$departmentOU = "OU=$departmentName,$usersOU"
+
+Connect to Azure AD
+Connect-AzureAD
+
+Create the new user in Active Directory and Azure AD
+$userParams = @{
+    Name = $displayName
+    SamAccountName = $username
+    DisplayName = $displayName
+    UserPrincipalName = "$username@$domain"
+    AccountPassword = $password
+    Enabled = $true
+    Path = $departmentOU
+    }
+    
+    New-ADUser @userParams
+    
+    #Add the new user to the "All Staff" team in Microsoft Teams
+    $allStaffTeam = Get-Team -DisplayName "All Staff"
+    Add-TeamUser -GroupId $allStaffTeam.GroupId -User $username
+    
+    #Assign the "User" role to the new user in Azure AD
+    $roleParams = @{
+    ObjectId = (Get-AzureADUser -ObjectId $username).ObjectId
+    DisplayName = "User"
+    RoleTemplateId = (Get-AzureADDirectoryRole | Where-Object { $_.DisplayName -eq "User" }).ObjectId
+    }
+    
+    Add-AzureADDirectoryRoleMember @roleParams
+    
+    #Display a summary of the new user's information
+    Clear-Host
+    Write-Host "New user onboarded successfully!"
+    Write-Host ""
+    Write-Host "Display name: $displayName"
+    Write-Host "Username: $username"
+    Write-Host "Department: $departmentName"
