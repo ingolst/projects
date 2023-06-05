@@ -1,0 +1,32 @@
+Start-Transcript "C:\AVD\TempFiles\App_Mixcraft.log"
+
+##########################
+#### Script Variables ####
+##########################
+
+Write-Host "Setting Variables"
+$localPath = "C:\AVD\TempFiles\"
+
+###########################
+#### Install Mixcraft9 ####
+###########################
+
+Write-Host "Extracting Mixcraft"
+Expand-Archive -LiteralPath ".\Mixcraft9\Mixcraft9.zip" -DestinationPath "$localPath\Mixcraft9" -Force
+
+Write-Host "Install Mixcraft9"
+$iniPath = "$localPath\Mixcraft9\mixcraft-config.ini"
+Start-Process -FilePath "$localPath\Mixcraft9\mixcraft9-setup-full.exe" -ArgumentList "/S:$iniPath /NOINIT" -NoNewWindow -PassThru -Wait
+
+Write-Host "Extract Mixcraft Plugins"
+
+Write-Host "Extract DeadDuck Plugin"
+Copy-Item "$localPath\Mixcraft9\Plugins\dead_duck_free_effects_1_6_0_2" "C:\Program Files (x86)\Acoustica Mixcraft 9\VST" -Recurse -Force
+
+Write-Host "Extract 2SEQ Plugin"
+Copy-Item "$localPath\Mixcraft9\Plugins\2SEQ" "C:\Program Files (x86)\Acoustica Mixcraft 9\VST" -Recurse -Force
+
+Write-Host "Extract Voxengo Plugin"
+Copy-Item "$localPath\Mixcraft9\Plugins\Voxengo" "C:\Program Files (x86)\Acoustica Mixcraft 9\VST" -Recurse -Force
+
+Stop-Transcript
